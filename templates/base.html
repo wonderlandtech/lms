@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>{% block title %}Classroom Ledger{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -11,72 +11,123 @@
   <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 
   <style>
-    /* ── Mobile overlay backdrop ── */
+    :root {
+      --sidebar-width: 260px;
+      --sidebar-width-tablet: 300px;
+      --sidebar-width-collapsed: 72px;
+      --topbar-height: 56px;
+    }
+
+    /* ── Mobile/tablet overlay backdrop ── */
     .sidebar-backdrop {
-      display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.45);
+      background: rgba(10, 14, 24, 0.5);
+      backdrop-filter: blur(1px);
       z-index: 1039;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.28s ease, visibility 0.28s ease;
     }
-    .sidebar-backdrop.open { display: block; }
+    .sidebar-backdrop.open {
+      opacity: 1;
+      visibility: visible;
+    }
 
-    /* ── Top mobile bar ── */
+    /* ── Top mobile/tablet bar ── */
     .mobile-topbar {
       display: none;
       position: sticky;
       top: 0;
       z-index: 1038;
       background: #1a2840;
-      padding: 0 1.25rem;
-      height: 56px;
+      padding: 0 1rem;
+      height: var(--topbar-height);
       align-items: center;
       border-bottom: 1px solid #44546b;
     }
     .mobile-topbar .brand-mobile {
       color: #fff;
       font-weight: 600;
-      font-size: 1rem;
+      font-size: 0.98rem;
       text-decoration: none;
       letter-spacing: 0.01em;
       margin: 0;
       padding: 0;
       flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .mobile-topbar .hamburger-btn {
       margin-left: auto;
       background: none;
       border: none;
       cursor: pointer;
-      padding: 6px;
+      padding: 10px;
       display: flex;
       flex-direction: column;
       gap: 5px;
-      border-radius: 6px;
+      border-radius: 8px;
       transition: background 0.15s;
+      min-width: 44px;
+      min-height: 44px;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
-    .mobile-topbar .hamburger-btn:hover { background: rgba(255,255,255,0.1); }
+    .mobile-topbar .hamburger-btn:hover,
+    .mobile-topbar .hamburger-btn:active { background: rgba(255,255,255,0.12); }
     .mobile-topbar .hamburger-btn span {
       display: block;
-      width: 22px;
+      width: 20px;
       height: 2px;
       background: #cfd6e2;
       border-radius: 2px;
       transition: transform 0.25s, opacity 0.25s;
       transform-origin: center;
     }
-    /* Animate to X when open */
     .hamburger-btn.is-open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
     .hamburger-btn.is-open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
     .hamburger-btn.is-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-    /* ── Sidebar ── */
+    /* ── Sidebar base ── */
     .app-sidebar {
-      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s ease;
+      overscroll-behavior: contain;
+      touch-action: pan-y;
     }
 
-    /* ── Responsive breakpoints ── */
-    @media (max-width: 991.98px) {
+    /* ── Desktop collapse-to-rail toggle ── */
+    .sidebar-collapse-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      border: 1px solid #44546b;
+      background: transparent;
+      color: #cfd6e2;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.2s;
+      flex-shrink: 0;
+    }
+    .sidebar-collapse-btn:hover { background: rgba(255,255,255,0.08); }
+
+    /* ───────────────────────────────────────────
+       Extra-small phones: ≤ 380px
+    ─────────────────────────────────────────── */
+    @media (max-width: 380px) {
+      .mobile-topbar .brand-mobile { font-size: 0.88rem; }
+      .app-sidebar { width: 88vw !important; }
+    }
+
+    /* ───────────────────────────────────────────
+       Phones & small tablets (portrait): ≤ 767.98px
+    ─────────────────────────────────────────── */
+    @media (max-width: 767.98px) {
       .mobile-topbar { display: flex; }
 
       .app-sidebar {
@@ -87,36 +138,112 @@
         z-index: 1040;
         transform: translateX(-100%);
         overflow-y: auto;
-        width: 260px !important;
-        /* sidebar already has its own bg from style.css; keep it */
+        width: min(82vw, var(--sidebar-width-tablet)) !important;
+        box-shadow: 4px 0 24px rgba(0,0,0,0.25);
       }
       .app-sidebar.is-open { transform: translateX(0); }
 
-      .app-shell {
-        display: block !important;
-        /* remove any flex/grid that puts sidebar beside main */
-      }
+      .app-shell { display: block !important; }
 
       .app-main {
-        /* no left offset on mobile — sidebar is overlaid */
-        padding: 1rem !important;
+        padding: 0.85rem !important;
       }
+
+      .sidebar-collapse-btn { display: none !important; }
     }
 
+    /* ───────────────────────────────────────────
+       Tablets (landscape) / small laptops: 768px – 991.98px
+       Sidebar still overlays, but a bit wider & main gets
+       more breathing room.
+    ─────────────────────────────────────────── */
+    @media (min-width: 768px) and (max-width: 991.98px) {
+      .mobile-topbar { display: flex; }
+
+      .app-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100dvh;
+        z-index: 1040;
+        transform: translateX(-100%);
+        overflow-y: auto;
+        width: var(--sidebar-width-tablet) !important;
+        box-shadow: 4px 0 24px rgba(0,0,0,0.25);
+      }
+      .app-sidebar.is-open { transform: translateX(0); }
+
+      .app-shell { display: block !important; }
+
+      .app-main {
+        padding: 1.25rem 1.5rem !important;
+      }
+
+      .sidebar-collapse-btn { display: none !important; }
+    }
+
+    /* ───────────────────────────────────────────
+       Desktop: ≥ 992px — sidebar docked, collapsible rail
+    ─────────────────────────────────────────── */
     @media (min-width: 992px) {
       .mobile-topbar { display: none !important; }
       .sidebar-backdrop { display: none !important; }
+
+      .app-sidebar {
+        width: var(--sidebar-width);
+        flex-shrink: 0;
+        overflow-x: hidden;
+      }
+
+      .sidebar-collapse-btn { display: flex; }
+
+      /* Collapsed (icon-only) rail */
+      .app-sidebar.collapsed {
+        width: var(--sidebar-width-collapsed);
+      }
+      .app-sidebar.collapsed .brand-by,
+      .app-sidebar.collapsed .brand-sub,
+      .app-sidebar.collapsed .nav-section-label,
+      .app-sidebar.collapsed .nav-link .nav-label,
+      .app-sidebar.collapsed .sidebar-user .user-label,
+      .app-sidebar.collapsed .sidebar-footer .signout-label {
+        display: none;
+      }
+      .app-sidebar.collapsed .brand { justify-content: center; }
+      .app-sidebar.collapsed .nav-link {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+      }
+      .app-sidebar.collapsed .sidebar-collapse-btn {
+        transform: rotate(180deg);
+      }
+    }
+
+    /* ── Ultra-wide screens: cap sidebar from feeling lost ── */
+    @media (min-width: 1600px) {
+      .app-sidebar:not(.collapsed) { width: 280px; }
+    }
+
+    /* ── Reduced motion ── */
+    @media (prefers-reduced-motion: reduce) {
+      .app-sidebar,
+      .sidebar-backdrop,
+      .hamburger-btn span,
+      .sidebar-collapse-btn { transition: none !important; }
     }
 
     /* ── Focus-visible ring for accessibility ── */
-    .hamburger-btn:focus-visible {
+    .hamburger-btn:focus-visible,
+    .sidebar-collapse-btn:focus-visible,
+    .app-sidebar .nav-link:focus-visible {
       outline: 2px solid #7aa3d1;
       outline-offset: 2px;
     }
   </style>
 </head>
 <body>
-  <!-- Mobile top bar (hidden on desktop) -->
+  <!-- Mobile/tablet top bar -->
   <div class="mobile-topbar" id="mobileTopbar">
     <a href="{{ url_for('admin.dashboard' if session.get('role') == 'admin' else 'student.dashboard') }}" class="brand-mobile">
       Classroom Ledger
@@ -133,42 +260,47 @@
 
   <div class="app-shell">
     <aside class="app-sidebar" id="appSidebar">
-      <a href="{{ url_for('admin.dashboard' if session.get('role') == 'admin' else 'student.dashboard') }}" class="brand">
-        <span class="brand-mark">&#9776;</span> Classroom Ledger
-      </a>
+      <div class="d-flex align-items-center justify-content-between" style="gap:.5rem;">
+        <a href="{{ url_for('admin.dashboard' if session.get('role') == 'admin' else 'student.dashboard') }}" class="brand">
+          <span class="brand-mark">&#9776;</span> Classroom Ledger
+        </a>
+        <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Collapse sidebar" title="Collapse sidebar">&#10094;</button>
+      </div>
       <div class="brand-by">by SchoolDev Technologies</div>
       <div class="brand-sub">{{ 'Instructor console' if session.get('role') == 'admin' else 'Student portal' }}</div>
 
       {% if session.get('role') == 'admin' %}
       <nav class="nav flex-column">
-        <a class="nav-link {{ 'active' if request.endpoint == 'admin.dashboard' }}" href="{{ url_for('admin.dashboard') }}"><span class="nav-icon">&#9670;</span> Overview</a>
+        <a class="nav-link {{ 'active' if request.endpoint == 'admin.dashboard' }}" href="{{ url_for('admin.dashboard') }}" title="Overview"><span class="nav-icon">&#9670;</span><span class="nav-label"> Overview</span></a>
         <div class="nav-section-label">Roster</div>
-        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin.') and 'student' in request.endpoint }}" href="{{ url_for('admin.students') }}"><span class="nav-icon">&#9737;</span> Students</a>
-        <a class="nav-link {{ 'active' if request.endpoint and 'attendance' in request.endpoint or request.endpoint == 'admin.new_session' or request.endpoint == 'admin.mark_attendance' }}" href="{{ url_for('admin.attendance_sessions') }}"><span class="nav-icon">&#9745;</span> Attendance</a>
+        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin.') and 'student' in request.endpoint }}" href="{{ url_for('admin.students') }}" title="Students"><span class="nav-icon">&#9737;</span><span class="nav-label"> Students</span></a>
+        <a class="nav-link {{ 'active' if request.endpoint and 'attendance' in request.endpoint or request.endpoint == 'admin.new_session' or request.endpoint == 'admin.mark_attendance' }}" href="{{ url_for('admin.attendance_sessions') }}" title="Attendance"><span class="nav-icon">&#9745;</span><span class="nav-label"> Attendance</span></a>
         <div class="nav-section-label">Coursework</div>
-        <a class="nav-link {{ 'active' if request.endpoint and 'link' in request.endpoint }}" href="{{ url_for('admin.links') }}"><span class="nav-icon">&#9656;</span> Class links</a>
-        <a class="nav-link {{ 'active' if request.endpoint and 'assignment' in request.endpoint }}" href="{{ url_for('admin.assignments') }}"><span class="nav-icon">&#9998;</span> Assignments</a>
-        <a class="nav-link {{ 'active' if request.endpoint and 'project' in request.endpoint }}" href="{{ url_for('admin.projects') }}"><span class="nav-icon">&#9881;</span> Projects</a>
+        <a class="nav-link {{ 'active' if request.endpoint and 'link' in request.endpoint }}" href="{{ url_for('admin.links') }}" title="Class links"><span class="nav-icon">&#9656;</span><span class="nav-label"> Class links</span></a>
+        <a class="nav-link {{ 'active' if request.endpoint and 'assignment' in request.endpoint }}" href="{{ url_for('admin.assignments') }}" title="Assignments"><span class="nav-icon">&#9998;</span><span class="nav-label"> Assignments</span></a>
+        <a class="nav-link {{ 'active' if request.endpoint and 'project' in request.endpoint }}" href="{{ url_for('admin.projects') }}" title="Projects"><span class="nav-icon">&#9881;</span><span class="nav-label"> Projects</span></a>
         <div class="nav-section-label">Completion</div>
-        <a class="nav-link {{ 'active' if request.endpoint and 'certificate' in request.endpoint }}" href="{{ url_for('admin.certificates') }}"><span class="nav-icon">&#10003;</span> Certificates</a>
+        <a class="nav-link {{ 'active' if request.endpoint and 'certificate' in request.endpoint }}" href="{{ url_for('admin.certificates') }}" title="Certificates"><span class="nav-icon">&#10003;</span><span class="nav-label"> Certificates</span></a>
       </nav>
       {% else %}
       <nav class="nav flex-column">
-        <a class="nav-link {{ 'active' if request.endpoint == 'student.dashboard' }}" href="{{ url_for('student.dashboard') }}"><span class="nav-icon">&#9670;</span> Overview</a>
-        <a class="nav-link {{ 'active' if request.endpoint == 'student.attendance' }}" href="{{ url_for('student.attendance') }}"><span class="nav-icon">&#9745;</span> My attendance</a>
-        <a class="nav-link {{ 'active' if request.endpoint == 'student.links' }}" href="{{ url_for('student.links') }}"><span class="nav-icon">&#9656;</span> Class links</a>
-        <a class="nav-link {{ 'active' if request.endpoint and 'assignment' in request.endpoint }}" href="{{ url_for('student.assignments') }}"><span class="nav-icon">&#9998;</span> Assignments</a>
-        <a class="nav-link {{ 'active' if request.endpoint and 'project' in request.endpoint }}" href="{{ url_for('student.projects') }}"><span class="nav-icon">&#9881;</span> Projects</a>
-        <a class="nav-link {{ 'active' if request.endpoint and 'certificate' in request.endpoint }}" href="{{ url_for('student.certificate') }}"><span class="nav-icon">&#10003;</span> Certificate</a>
+        <a class="nav-link {{ 'active' if request.endpoint == 'student.dashboard' }}" href="{{ url_for('student.dashboard') }}" title="Overview"><span class="nav-icon">&#9670;</span><span class="nav-label"> Overview</span></a>
+        <a class="nav-link {{ 'active' if request.endpoint == 'student.attendance' }}" href="{{ url_for('student.attendance') }}" title="My attendance"><span class="nav-icon">&#9745;</span><span class="nav-label"> My attendance</span></a>
+        <a class="nav-link {{ 'active' if request.endpoint == 'student.links' }}" href="{{ url_for('student.links') }}" title="Class links"><span class="nav-icon">&#9656;</span><span class="nav-label"> Class links</span></a>
+        <a class="nav-link {{ 'active' if request.endpoint and 'assignment' in request.endpoint }}" href="{{ url_for('student.assignments') }}" title="Assignments"><span class="nav-icon">&#9998;</span><span class="nav-label"> Assignments</span></a>
+        <a class="nav-link {{ 'active' if request.endpoint and 'project' in request.endpoint }}" href="{{ url_for('student.projects') }}" title="Projects"><span class="nav-icon">&#9881;</span><span class="nav-label"> Projects</span></a>
+        <a class="nav-link {{ 'active' if request.endpoint and 'certificate' in request.endpoint }}" href="{{ url_for('student.certificate') }}" title="Certificate"><span class="nav-icon">&#10003;</span><span class="nav-label"> Certificate</span></a>
       </nav>
       {% endif %}
 
       <div class="sidebar-footer">
         <div class="sidebar-user">
-          {{ session.get('full_name', '') }}
+          <span class="user-label">{{ session.get('full_name', '') }}</span>
           <span class="role-tag">{{ 'Instructor' if session.get('role') == 'admin' else 'Student' }}</span>
         </div>
-        <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-secondary w-100" style="color:#cfd6e2; border-color:#44546b;">Sign out</a>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-secondary w-100" style="color:#cfd6e2; border-color:#44546b;" title="Sign out">
+          <span class="signout-label">Sign out</span>
+        </a>
       </div>
     </aside>
 
@@ -193,10 +325,13 @@
 
   <script>
     (function () {
-      const btn      = document.getElementById('hamburgerBtn');
-      const sidebar  = document.getElementById('appSidebar');
-      const backdrop = document.getElementById('sidebarBackdrop');
+      const btn         = document.getElementById('hamburgerBtn');
+      const sidebar     = document.getElementById('appSidebar');
+      const backdrop    = document.getElementById('sidebarBackdrop');
+      const collapseBtn = document.getElementById('sidebarCollapseBtn');
+      const DESKTOP_MQ  = window.matchMedia('(min-width: 992px)');
 
+      /* ---------- Mobile / tablet drawer ---------- */
       function openSidebar() {
         sidebar.classList.add('is-open');
         backdrop.classList.add('open');
@@ -204,6 +339,8 @@
         btn.setAttribute('aria-expanded', 'true');
         btn.setAttribute('aria-label', 'Close navigation');
         document.body.style.overflow = 'hidden';
+        const firstLink = sidebar.querySelector('.nav-link');
+        if (firstLink) firstLink.focus({ preventScroll: true });
       }
 
       function closeSidebar() {
@@ -221,22 +358,80 @@
 
       backdrop.addEventListener('click', closeSidebar);
 
-      /* Close on Escape */
       document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && sidebar.classList.contains('is-open')) closeSidebar();
       });
 
-      /* Close sidebar if viewport is resized back to desktop */
-      window.addEventListener('resize', function () {
-        if (window.innerWidth >= 992) closeSidebar();
+      DESKTOP_MQ.addEventListener('change', function (e) {
+        if (e.matches) closeSidebar();
       });
 
-      /* Close when a nav link is tapped (good UX on mobile) */
       sidebar.querySelectorAll('.nav-link').forEach(function (link) {
         link.addEventListener('click', function () {
-          if (window.innerWidth < 992) closeSidebar();
+          if (!DESKTOP_MQ.matches) closeSidebar();
         });
       });
+
+      /* Basic focus trap while drawer is open */
+      sidebar.addEventListener('keydown', function (e) {
+        if (e.key !== 'Tab' || DESKTOP_MQ.matches || !sidebar.classList.contains('is-open')) return;
+        const focusables = sidebar.querySelectorAll('a[href], button:not([disabled])');
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last  = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault(); last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault(); first.focus();
+        }
+      });
+
+      /* Swipe-to-close on touch devices */
+      let touchStartX = null;
+      sidebar.addEventListener('touchstart', function (e) {
+        touchStartX = e.touches[0].clientX;
+      }, { passive: true });
+      sidebar.addEventListener('touchmove', function (e) {
+        if (touchStartX === null || DESKTOP_MQ.matches) return;
+        const dx = e.touches[0].clientX - touchStartX;
+        if (dx < -60) { closeSidebar(); touchStartX = null; }
+      }, { passive: true });
+      sidebar.addEventListener('touchend', function () { touchStartX = null; });
+
+      /* Swipe-from-edge-to-open on mobile/tablet */
+      let edgeStartX = null;
+      document.addEventListener('touchstart', function (e) {
+        if (DESKTOP_MQ.matches || sidebar.classList.contains('is-open')) return;
+        if (e.touches[0].clientX < 24) edgeStartX = e.touches[0].clientX;
+      }, { passive: true });
+      document.addEventListener('touchmove', function (e) {
+        if (edgeStartX === null) return;
+        const dx = e.touches[0].clientX - edgeStartX;
+        if (dx > 40) { openSidebar(); edgeStartX = null; }
+      }, { passive: true });
+      document.addEventListener('touchend', function () { edgeStartX = null; });
+
+      /* ---------- Desktop collapsible rail ---------- */
+      const COLLAPSE_KEY = 'classroomLedger.sidebarCollapsed';
+
+      function setCollapsed(collapsed) {
+        sidebar.classList.toggle('collapsed', collapsed);
+        collapseBtn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+        collapseBtn.setAttribute('title', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+        try { localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0'); } catch (err) {}
+      }
+
+      if (collapseBtn) {
+        collapseBtn.addEventListener('click', function () {
+          setCollapsed(!sidebar.classList.contains('collapsed'));
+        });
+
+        try {
+          if (localStorage.getItem(COLLAPSE_KEY) === '1' && DESKTOP_MQ.matches) {
+            setCollapsed(true);
+          }
+        } catch (err) {}
+      }
     })();
   </script>
 
