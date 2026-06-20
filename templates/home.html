@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SchoolDev — The LMS for real classroom</title>
+<title>SchoolDev — The LMS for real classrooms</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 
@@ -129,13 +128,46 @@
   .nav-cta{ display:flex; align-items:center; gap:18px; }
   .nav-login{ font-size:0.93rem; font-weight:600; color:var(--ink-soft); }
   .nav-login:hover{ color:var(--marker); }
-  @media (max-width:860px){ .nav-login{ display:none; } }
-  .nav-toggle{ display:none; background:none; border:none; cursor:pointer; padding:6px; }
-  .nav-toggle span{ display:block; width:22px; height:2px; background:var(--ink); margin:5px 0; }
 
-  @media (max-width: 860px){
+  .nav-toggle{
+    display:none; background:none; border:none; cursor:pointer;
+    padding:6px; border-radius:6px; transition:background .15s; margin-left:8px;
+  }
+  .nav-toggle:hover{ background:rgba(20,33,61,0.07); }
+  .nav-toggle span{
+    display:block; width:22px; height:2px; background:var(--ink);
+    border-radius:2px; transition:transform .24s, opacity .24s;
+    transform-origin:center;
+  }
+  .nav-toggle span:nth-child(2){ margin:5px 0; }
+  .nav-toggle.open span:nth-child(1){ transform:translateY(7px) rotate(45deg); }
+  .nav-toggle.open span:nth-child(2){ opacity:0; transform:scaleX(0); }
+  .nav-toggle.open span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); }
+
+  .mobile-drawer{
+    display:none; position:absolute; top:100%; left:0; right:0;
+    background:rgba(250,247,241,0.98); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    padding:20px 28px 28px; flex-direction:column; gap:0; z-index:49;
+  }
+  .mobile-drawer.open{ display:flex; }
+  .mobile-drawer a{
+    font-size:1rem; font-weight:500; color:var(--ink-soft);
+    padding:12px 0; border-bottom:1px solid var(--line);
+  }
+  .mobile-drawer a:hover{ color:var(--marker); }
+  .mobile-drawer .btn{ width:100%; justify-content:center; margin-top:16px; border-bottom:none; }
+  .mobile-drawer .m-login{
+    font-size:1rem; font-weight:600; color:var(--ink-soft);
+    padding:12px 0; border-bottom:1px solid var(--line);
+  }
+  .mobile-drawer .m-login:hover{ color:var(--marker); }
+
+  @media (max-width:860px){
     .nav-links{ display:none; }
-    .nav-toggle{ display:block; }
+    .nav-login{ display:none; }
+    .nav-cta .btn{ display:none; }
+    .nav-toggle{ display:flex; flex-direction:column; }
   }
 
   /* ---------- Hero ---------- */
@@ -187,9 +219,15 @@
   .dash-due-row .when{ font-family:var(--font-mono); font-size:0.68rem; color:#9DB3E0; }
 
   @media (max-width: 960px){
-    .hero-grid{ grid-template-columns:1fr; gap:48px; }
+    .hero-grid{ grid-template-columns:1fr; gap:56px; }
     .hero h1{ font-size:2.4rem; }
-    .dash-card{ right:14px; bottom:-30px; width:230px; }
+    .dash-card{ right:0; bottom:-28px; width:220px; }
+    .hero-visual{ padding-bottom:40px; }
+  }
+  @media (max-width:540px){
+    .hero{ padding:40px 0 24px; }
+    .hero h1{ font-size:2rem; }
+    .dash-card{ position:relative; right:auto; bottom:auto; width:100%; margin-top:16px; border-radius:10px; }
   }
 
   /* ---------- Trust strip ---------- */
@@ -289,6 +327,11 @@
 
   @media (max-width:760px){
     .foot-top{ grid-template-columns:1fr 1fr; row-gap:32px; }
+    .foot-brand{ grid-column:1 / -1; }
+  }
+  @media (max-width:480px){
+    .foot-top{ grid-template-columns:1fr; }
+    .foot-bottom{ flex-direction:column; gap:8px; }
   }
 
   /* ---------- Reveal on scroll ---------- */
@@ -301,46 +344,32 @@
 </head>
 <body>
 
-  <nav class="nav">
+  <nav class="nav" style="position:sticky;top:0;z-index:50;">
     <div class="wrap">
       <a href="#top" class="brand">
-        <span class="mark">School<span>Devs</span></span>       
+        <span class="mark">School<span>Dev</span></span>
+        
       </a>
       <div class="nav-links">
         <a href="#features">Features</a>
         <a href="#stats">Why schools switch</a>
         <a href="#testimonial">Reviews</a>
-         <div class="dropdown">
-        <button class="btn btn-primary dropdown-toggle" type="button"
-                id="candidateProfileDropdown"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">
-            Candidate Profile
-        </button>
-
-        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="candidateProfileDropdown">
-            <li>
-                <a class="dropdown-item" href="{{ url_for('auth.login') }}">
-                    <i class="bi bi-box-arrow-in-right me-2"></i> Login
-                </a>
-            </li>
-            <li>
-                <a class="dropdown-item" href="{{ url_for('auth.register') }}">
-                    <i class="bi bi-person-plus me-2"></i> Register
-                </a>
-            </li>
-        </ul>
-    </div>
-
       </div>
       <div class="nav-cta">
-   
-    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" style='margin-right:-15px'>
-        <span></span>
-        <span></span>
-        <span></span>
-    </button>
-</div>
+        <a href="{{ url_for('auth.login') }}" class="nav-login">Log in</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Start free trial</a>
+        <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobileDrawer">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+    <!-- Mobile drawer -->
+    <div class="mobile-drawer" id="mobileDrawer">
+      <a href="#features">Features</a>
+      <a href="#stats">Why schools switch</a>
+      <a href="#testimonial">Reviews</a>
+      <a href="{{ url_for('auth.login') }}" class="m-login">Log in</a>
+      <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Start free trial</a>
     </div>
   </nav>
 
