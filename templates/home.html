@@ -355,13 +355,38 @@
         <a href="#stats">Why schools switch</a>
         <a href="#testimonial">Reviews</a>
       </div>
-      <div class="nav-cta">
-        <a href="{{ url_for('auth.login') }}" class="nav-login">Log in</a>
-        <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Start free trial</a>
-        <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobileDrawer">
-          <span></span><span></span><span></span>
+      <div class="nav-cta d-flex align-items-center gap-2">
+
+    <div class="dropdown">
+        <button class="btn btn-primary dropdown-toggle"
+                type="button"
+                id="candidateProfile"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+            Candidate Profile
         </button>
-      </div>
+
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="candidateProfile">
+            <li>
+                <a class="dropdown-item" href="{{ url_for('auth.login') }}">
+                    <i class="bi bi-box-arrow-in-right me-2"></i> Login
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="{{ url_for('auth.register') }}">
+                    <i class="bi bi-person-plus me-2"></i> Register
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+</div>
     </div>
     <!-- Mobile drawer -->
     <div class="mobile-drawer" id="mobileDrawer">
