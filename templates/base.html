@@ -260,13 +260,13 @@
 
   <div class="app-shell">
     <aside class="app-sidebar" id="appSidebar">
-      <div class="d-flex align-items-center justify-content-between" style="gap:.5rem;">
+      <div class="d-none d-md-flex align-items-center justify-content-between" style="gap:.5rem;">
         <a href="{{ url_for('admin.dashboard' if session.get('role') == 'admin' else 'student.dashboard') }}" class="brand">
           <span class="brand-mark">&#9776;</span> Classroom Ledger
         </a>
         <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Collapse sidebar" title="Collapse sidebar">&#10094;</button>
       </div>
-      <div class="brand-by">by SchoolDev Technologies</div>
+      <div class="brand-by d-none d-md-flex">by SchoolDev Technologies</div>
       <div class="brand-sub">{{ 'Instructor console' if session.get('role') == 'admin' else 'Student portal' }}</div>
 
       {% if session.get('role') == 'admin' %}
