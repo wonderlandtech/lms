@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ project.title }} — Submissions{% endblock %}
+{% block content %}
+
+<div class="page-header d-flex justify-content-between align-items-end flex-wrap gap-2">
+  <div>
+    <h1>{{ project.title }}</h1>
+    <div class="lede">{{ subs|length }} submission(s) · Deadline {{ project.deadline.strftime('%b %d, %Y · %I:%M %p') }}</div>
+  </div>
+  <a href="{{ url_for('admin.projects') }}" class="btn btn-outline-secondary">Back to projects</a>
+</div>
+
+{% if subs %}
+<div class="d-flex flex-column gap-3">
+  {% for s in subs %}
+  <div class="card">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+        <div>
+          <h2 class="h6 fw-bold mb-0">
+            {% if s.submission_type == 'group' %}{{ s.group_name }}{% else %}{{ s.student.full_name }}{% endif %}
+          </h2>
+          <div class="text-mono small text-muted">
+            submitted by {{ s.student.full_name }} ({{ s.student.student_id }}) · {{ s.submitted_at.strftime('%b %d, %Y %I:%M %p') }}
+          </div>
+          {% if s.submission_type == 'group' and s.group_members %}
+          <div class="small text-muted mt-1">Teammates: {{ s.group_members }}</div>
+          {% endif %}
+        </div>
+        <div class="d-flex gap-1">
+          <span class="badge-soft {{ 'badge-pending' if s.submission_type == 'group' else 'badge-approved' }}">{{ s.submission_type }}</span>
+          <span class="badge-soft badge-{{ s.status }}">{{ s.status }}</span>
+        </div>
+      </div>
+      <div class="p-2 mb-3" style="background-color: var(--paper); border-radius: 6px; white-space: pre-wrap;">{{ s.content }}</div>
+      <form method="POST" action="{{ url_for('admin.grade_project_submission', sub_id=s.id) }}" class="row g-2 align-items-end">
+        <div class="col-sm-3">
+          <label class="form-label small mb-1">Score</label>
+          <input type="number" name="score" class="form-control form-control-sm" min="0" value="{{ s.score if s.score is not none else '' }}">
+        </div>
+        <div class="col-sm-6">
+          <label class="form-label small mb-1">Feedback</label>
+          <input type="text" name="feedback" class="form-control form-control-sm" value="{{ s.feedback or '' }}">
+        </div>
+        <div class="col-sm-3">
+          <button type="submit" class="btn btn-sm btn-primary w-100">Save grade</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state"><div class="empty-icon">&#9737;</div>No submissions yet.</div>
+{% endif %}
+
+{% endblock %}

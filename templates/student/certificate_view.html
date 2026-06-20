@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}My certificate — Classroom Ledger{% endblock %}
+{% block content %}
+
+<div class="page-header d-flex justify-content-between align-items-end flex-wrap gap-2">
+  <div>
+    <h1>Your certificate</h1>
+    <div class="lede">Save or print this page for your records.</div>
+  </div>
+  <a href="{{ url_for('student.certificate') }}" class="btn btn-outline-secondary">Back</a>
+</div>
+
+<div class="certificate-frame">
+  <div class="certificate-eyebrow">Classroom Ledger · Certificate of Completion</div>
+  <div class="certificate-name">{{ user.full_name }}</div>
+  <p class="text-muted">has successfully completed</p>
+  <p class="fw-semibold" style="font-size: 1.1rem;">{{ cert.course_name }}</p>
+  <div class="certificate-seal">&#10003;</div>
+  <p class="text-muted small mb-1">Issued {{ cert.approved_at.strftime('%B %d, %Y') if cert.approved_at else '' }} · Approved by {{ cert.approved_by or 'Administrator' }}</p>
+  <div class="certificate-code">{{ cert.certificate_code }}</div>
+</div>
+
+<style>
+  @media print {
+    .app-sidebar, .page-header, .navbar { display: none !important; }
+    .app-main { padding: 0 !important; }
+  }
+</style>
+
+{% endblock %}

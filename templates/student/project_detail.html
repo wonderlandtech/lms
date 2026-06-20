@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}{{ p.title }} — Classroom Ledger{% endblock %}
+{% block content %}
+
+<div class="page-header d-flex justify-content-between align-items-end flex-wrap gap-2">
+  <div>
+    <h1>{{ p.title }}</h1>
+    <div class="lede">Max group size {{ p.max_group_size }}</div>
+  </div>
+  <span class="deadline-pill {{ 'deadline-closed' if not is_open else 'deadline-open' }}" data-deadline="{{ p.deadline.isoformat() }}">
+    <span class="countdown-text">{{ p.deadline.strftime('%b %d, %Y · %I:%M %p') }}</span>
+  </span>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="h6 fw-bold">Brief</h2>
+    <p style="white-space: pre-wrap;">{{ p.description or 'No additional brief provided.' }}</p>
+  </div>
+</div>
+
+{% if sub and sub.status == 'graded' %}
+<div class="card mb-4">
+  <div class="card-header">Your grade</div>
+  <div class="card-body">
+    <div class="stat-figure mb-1" style="font-family: var(--font-display); font-size: 1.8rem;">{{ sub.score }}</div>
+    {% if sub.feedback %}<p class="text-muted small mb-0">{{ sub.feedback }}</p>{% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="card" style="max-width: 720px;">
+  <div class="card-body">
+    <h2 class="h6 fw-bold mb-3">{{ 'Update your submission' if sub else 'Submit your work' }}</h2>
+    {% if not is_open %}
+    <div class="alert alert-secondary">This project's deadline has passed — submissions are closed.</div>
+    {% endif %}
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label d-block">How are you submitting?</label>
+        <div class="row g-2">
+          <div class="col-sm-6">
+            <label class="group-toggle-card d-block mb-0" data-type="individual">
+              <input type="radio" name="submission_type" value="individual" class="form-check-input me-2"
+                     {{ 'disabled' if not p.allow_individual or not is_open }}
+                     {{ 'checked' if (sub and sub.submission_type == 'individual') or (not sub and p.allow_individual) }}>
+              On my own
+              {% if not p.allow_individual %}<div class="small text-muted">Not enabled for this project</div>{% endif %}
+            </label>
+          </div>
+          <div class="col-sm-6">
+            <label class="group-toggle-card d-block mb-0" data-type="group">
+              <input type="radio" name="submission_type" value="group" class="form-check-input me-2"
+                     {{ 'disabled' if not p.allow_group or not is_open }}
+                     {{ 'checked' if (sub and sub.submission_type == 'group') or (not sub and not p.allow_individual and p.allow_group) }}>
+              As a group
+              {% if not p.allow_group %}<div class="small text-muted">Not enabled for this project</div>{% endif %}
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div id="group-fields" class="mb-3 {{ '' if (sub and sub.submission_type == 'group') else 'd-none' }}">
+        <div class="mb-2">
+          <label class="form-label">Group name</label>
+          <input type="text" name="group_name" class="form-control" data-required-for-group
+                 value="{{ sub.group_name if sub else '' }}" {{ 'disabled' if not is_open }}>
+        </div>
+        <div>
+          <label class="form-label">Teammates <span class="text-muted">(comma-separated names)</span></label>
+          <input type="text" name="group_members" class="form-control"
+                 value="{{ sub.group_members if sub else '' }}" {{ 'disabled' if not is_open }}>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Description and/or link to your work</label>
+        <textarea name="content" class="form-control" rows="6" {{ 'disabled' if not is_open }} required>{{ sub.content if sub else '' }}</textarea>
+      </div>
+      <button type="submit" class="btn btn-primary" {{ 'disabled' if not is_open }}>{{ 'Update submission' if sub else 'Submit' }}</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

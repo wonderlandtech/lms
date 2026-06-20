@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Projects — Classroom Ledger{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h1>Projects</h1>
+  <div class="lede">{{ projects|length }} posted to the class</div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    {% if projects %}
+    <table class="table ledger-table mb-0">
+      <thead><tr><th>Title</th><th>Deadline</th><th>Modes</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for p in projects %}
+        {% set sub = my_subs.get(p.id) %}
+        <tr>
+          <td class="fw-semibold">{{ p.title }}</td>
+          <td>
+            <span class="deadline-pill {{ 'deadline-closed' if p.deadline < now else 'deadline-open' }}" data-deadline="{{ p.deadline.isoformat() }}">
+              <span class="countdown-text">{{ p.deadline.strftime('%b %d, %Y · %I:%M %p') }}</span>
+            </span>
+          </td>
+          <td class="small">
+            {% if p.allow_group %}<span class="badge-soft badge-pending">Group</span>{% endif %}
+            {% if p.allow_individual %}<span class="badge-soft badge-approved">Individual</span>{% endif %}
+          </td>
+          <td>
+            {% if sub %}
+              <span class="badge-soft badge-{{ sub.status }}">{{ sub.status }}{% if sub.score is not none %} · {{ sub.score }}{% endif %}</span>
+            {% else %}
+              <span class="badge-soft" style="background-color: var(--rule); color: var(--slate);">not submitted</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <a href="{{ url_for('student.project_detail', project_id=p.id) }}" class="btn btn-sm btn-outline-primary">{{ 'View' if sub else 'Open' }}</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state"><div class="empty-icon">&#9656;</div>No projects posted yet.</div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

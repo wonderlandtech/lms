@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit project' if mode == 'edit' else 'New project' }} — Classroom Ledger{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h1>{{ 'Edit project' if mode == 'edit' else 'New project' }}</h1>
+  <div class="lede">Set the brief, submission modes and a deadline.</div>
+</div>
+
+<div class="card" style="max-width: 620px;">
+  <div class="card-body">
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label">Title</label>
+        <input type="text" name="title" class="form-control" value="{{ project.title if project else '' }}" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Description / brief</label>
+        <textarea name="description" class="form-control" rows="4">{{ project.description if project else '' }}</textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Deadline</label>
+        <input type="datetime-local" name="deadline" class="form-control"
+               value="{{ project.deadline.strftime('%Y-%m-%dT%H:%M') if project else '' }}" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label d-block">Submission modes</label>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="checkbox" name="allow_group" id="allow_group"
+                 {{ 'checked' if not project or project.allow_group }}>
+          <label class="form-check-label" for="allow_group">Allow group submissions</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="checkbox" name="allow_individual" id="allow_individual"
+                 {{ 'checked' if not project or project.allow_individual }}>
+          <label class="form-check-label" for="allow_individual">Allow individual submissions</label>
+        </div>
+      </div>
+      <div class="mb-3" style="max-width: 220px;">
+        <label class="form-label">Max group size</label>
+        <input type="number" name="max_group_size" class="form-control" min="1"
+               value="{{ project.max_group_size if project else 4 }}">
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">{{ 'Save changes' if mode == 'edit' else 'Post project' }}</button>
+        <a href="{{ url_for('admin.projects') }}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

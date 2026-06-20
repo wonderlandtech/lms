@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Certificate — Classroom Ledger{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h1>Certificate of completion</h1>
+  <div class="lede">Request a certificate once you've finished the coursework.</div>
+</div>
+
+<div class="card" style="max-width: 560px;">
+  <div class="card-body text-center py-5">
+    {% if cert.status == 'approved' %}
+      <div class="certificate-seal mx-auto mb-3">&#10003;</div>
+      <h2 class="h5 fw-bold mb-2">Your certificate is ready</h2>
+      <p class="text-muted small mb-4">Approved {{ cert.approved_at.strftime('%b %d, %Y') if cert.approved_at else '' }} by {{ cert.approved_by or 'your instructor' }}.</p>
+      <a href="{{ url_for('student.view_certificate') }}" class="btn btn-primary">View certificate</a>
+
+    {% elif cert.status == 'pending' %}
+      <span class="badge-soft badge-pending mb-3 d-inline-block">Pending review</span>
+      <h2 class="h5 fw-bold mb-2">Request submitted</h2>
+      <p class="text-muted small mb-0">Your instructor will review your request — requested {{ cert.requested_at.strftime('%b %d, %Y') if cert.requested_at else '' }}.</p>
+
+    {% elif cert.status == 'rejected' %}
+      <span class="badge-soft badge-rejected mb-3 d-inline-block">Declined</span>
+      <h2 class="h5 fw-bold mb-2">Your request wasn't approved</h2>
+      {% if cert.remarks %}<p class="text-muted small mb-4">{{ cert.remarks }}</p>{% endif %}
+      <form method="POST">
+        <button type="submit" class="btn btn-primary">Request again</button>
+      </form>
+
+    {% else %}
+      <h2 class="h5 fw-bold mb-2">Ready to request your certificate?</h2>
+      <p class="text-muted small mb-4">Your instructor will review your attendance, assignments and projects before approving.</p>
+      <form method="POST">
+        <button type="submit" class="btn btn-primary">Request certificate</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

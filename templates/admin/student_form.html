@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit student' if mode == 'edit' else 'Register a student' }} — Classroom Ledger{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h1>{{ 'Edit student' if mode == 'edit' else 'Register a student' }}</h1>
+  <div class="lede">{{ 'Update contact details or reset a password.' if mode == 'edit' else 'Add a learner to the class roster.' }}</div>
+</div>
+
+<div class="card" style="max-width: 560px;">
+  <div class="card-body">
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label">Full name</label>
+        <input type="text" name="full_name" class="form-control"
+               value="{{ student.full_name if student else (form.full_name if form else '') }}" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" class="form-control"
+               value="{{ student.email if student else (form.email if form else '') }}" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Phone <span class="text-muted">(optional)</span></label>
+        <input type="text" name="phone" class="form-control"
+               value="{{ student.phone if student else (form.phone if form else '') }}">
+      </div>
+      {% if mode == 'add' %}
+      <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" value="{{ form.username if form else '' }}" required>
+      </div>
+      {% endif %}
+      <div class="mb-3">
+        <label class="form-label">{{ 'New password' if mode == 'edit' else 'Password' }}
+          <span class="text-muted">{{ '(leave blank to keep current password)' if mode == 'edit' else '(leave blank for default: student123)' }}</span>
+        </label>
+        <input type="text" name="password" class="form-control" placeholder="{{ '••••••••' if mode == 'edit' else 'student123' }}">
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">{{ 'Save changes' if mode == 'edit' else 'Register student' }}</button>
+        <a href="{{ url_for('admin.students') }}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

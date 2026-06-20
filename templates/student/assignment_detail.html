@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ a.title }} — Classroom Ledger{% endblock %}
+{% block content %}
+
+<div class="page-header d-flex justify-content-between align-items-end flex-wrap gap-2">
+  <div>
+    <h1>{{ a.title }}</h1>
+    <div class="lede">Max score {{ a.max_score }}</div>
+  </div>
+  <span class="deadline-pill {{ 'deadline-closed' if not is_open else 'deadline-open' }}" data-deadline="{{ a.deadline.isoformat() }}">
+    <span class="countdown-text">{{ a.deadline.strftime('%b %d, %Y · %I:%M %p') }}</span>
+  </span>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="h6 fw-bold">Instructions</h2>
+    <p style="white-space: pre-wrap;">{{ a.description or 'No additional instructions provided.' }}</p>
+  </div>
+</div>
+
+{% if sub and sub.status == 'graded' %}
+<div class="card mb-4">
+  <div class="card-header">Your grade</div>
+  <div class="card-body">
+    <div class="stat-figure mb-1" style="font-family: var(--font-display); font-size: 1.8rem;">{{ sub.score }}/{{ a.max_score }}</div>
+    {% if sub.feedback %}<p class="text-muted small mb-0">{{ sub.feedback }}</p>{% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="card" style="max-width: 720px;">
+  <div class="card-body">
+    <h2 class="h6 fw-bold mb-3">{{ 'Update your submission' if sub else 'Submit your work' }}</h2>
+    {% if not is_open %}
+    <div class="alert alert-secondary">This assignment's deadline has passed — submissions are closed.</div>
+    {% endif %}
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label">Your answer or a link to your work</label>
+        <textarea name="content" class="form-control" rows="6" {{ 'disabled' if not is_open }} required>{{ sub.content if sub else '' }}</textarea>
+      </div>
+      <button type="submit" class="btn btn-primary" {{ 'disabled' if not is_open }}>{{ 'Update submission' if sub else 'Submit' }}</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

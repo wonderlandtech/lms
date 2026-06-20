@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}My attendance — Classroom Ledger{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h1>My attendance</h1>
+  <div class="lede">{{ pct }}% present overall ({{ present }} present · {{ late }} late · {{ absent }} absent of {{ total }} sessions)</div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-4">
+    <div class="stat-card"><div class="stat-accent" style="background-color: var(--sage);"></div>
+      <div class="stat-figure">{{ present }}</div>
+      <div class="stat-label">Present</div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="stat-card"><div class="stat-accent"></div>
+      <div class="stat-figure">{{ late }}</div>
+      <div class="stat-label">Late</div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="stat-card"><div class="stat-accent" style="background-color: var(--brick);"></div>
+      <div class="stat-figure">{{ absent }}</div>
+      <div class="stat-label">Absent</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    {% if records %}
+    <table class="table ledger-table mb-0">
+      <thead><tr><th>Session</th><th>Date</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td class="fw-semibold">{{ r.session.title }}</td>
+          <td class="text-mono small">{{ r.session.date.strftime('%A, %b %d, %Y') }}</td>
+          <td><span class="badge-soft badge-{{ r.status }}">{{ r.status }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state"><div class="empty-icon">&#9737;</div>No attendance recorded yet.</div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
