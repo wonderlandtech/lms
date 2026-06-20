@@ -109,6 +109,11 @@
     background:rgba(250,247,241,0.92);
     backdrop-filter:blur(8px);
     border-bottom:1px solid var(--line);
+    transition: box-shadow .2s ease, background-color .2s ease;
+  }
+  .nav.scrolled{
+    box-shadow: 0 8px 24px -16px rgba(20,33,61,0.35);
+    background:rgba(250,247,241,0.97);
   }
   .nav .wrap{
     display:flex; align-items:center; justify-content:space-between;
@@ -124,17 +129,25 @@
     color:var(--slate); text-transform:uppercase;
   }
   .nav-links{ display:flex; align-items:center; gap:34px; }
-  .nav-links a{ font-size:0.93rem; font-weight:500; color:var(--ink-soft); }
+  .nav-links a{ font-size:0.93rem; font-weight:500; color:var(--ink-soft); position:relative; padding:4px 0; }
+  .nav-links a::after{
+    content:''; position:absolute; left:0; right:100%; bottom:-2px; height:2px;
+    background:var(--marker); transition:right .2s ease;
+  }
   .nav-links a:hover{ color:var(--marker); }
+  .nav-links a:hover::after,
+  .nav-links a.active::after{ right:0; }
+  .nav-links a.active{ color:var(--marker); }
   .nav-cta{ display:flex; align-items:center; gap:18px; }
   .nav-login{ font-size:0.93rem; font-weight:600; color:var(--ink-soft); }
   .nav-login:hover{ color:var(--marker); }
 
   .nav-toggle{
     display:none; background:none; border:none; cursor:pointer;
-    padding:6px; border-radius:6px; transition:background .15s; margin-left:8px;
+    padding:10px; border-radius:8px; transition:background .15s; margin-left:8px;
+    min-width:44px; min-height:44px; align-items:center; justify-content:center;
   }
-  .nav-toggle:hover{ background:rgba(20,33,61,0.07); }
+  .nav-toggle:hover, .nav-toggle:active{ background:rgba(20,33,61,0.07); }
   .nav-toggle span{
     display:block; width:22px; height:2px; background:var(--ink);
     border-radius:2px; transition:transform .24s, opacity .24s;
@@ -146,21 +159,30 @@
   .nav-toggle.open span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); }
 
   .mobile-drawer{
-    display:none; position:absolute; top:100%; left:0; right:0;
+    display:flex; flex-direction:column; gap:0;
+    position:absolute; top:100%; left:0; right:0;
     background:rgba(250,247,241,0.98); backdrop-filter:blur(10px);
     border-bottom:1px solid var(--line);
-    padding:20px 28px 28px; flex-direction:column; gap:0; z-index:49;
+    padding:20px 28px 28px; z-index:49;
+    visibility:hidden; opacity:0; transform:translateY(-8px);
+    pointer-events:none;
+    transition:opacity .22s ease, transform .22s ease, visibility .22s ease;
+    max-height:calc(100dvh - 72px);
+    overflow-y:auto;
   }
-  .mobile-drawer.open{ display:flex; }
+  .mobile-drawer.open{
+    visibility:visible; opacity:1; transform:translateY(0); pointer-events:auto;
+  }
   .mobile-drawer a{
     font-size:1rem; font-weight:500; color:var(--ink-soft);
-    padding:12px 0; border-bottom:1px solid var(--line);
+    padding:14px 0; border-bottom:1px solid var(--line);
   }
-  .mobile-drawer a:hover{ color:var(--marker); }
+  .mobile-drawer a:hover, .mobile-drawer a:active{ color:var(--marker); }
+  .mobile-drawer a.active{ color:var(--marker); }
   .mobile-drawer .btn{ width:100%; justify-content:center; margin-top:16px; border-bottom:none; }
   .mobile-drawer .m-login{
     font-size:1rem; font-weight:600; color:var(--ink-soft);
-    padding:12px 0; border-bottom:1px solid var(--line);
+    padding:14px 0; border-bottom:1px solid var(--line);
   }
   .mobile-drawer .m-login:hover{ color:var(--marker); }
 
@@ -169,6 +191,10 @@
     .nav-login{ display:none; }
     .nav-cta .btn{ display:none; }
     .nav-toggle{ display:flex; flex-direction:column; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .mobile-drawer, .nav-toggle span, .nav{ transition:none !important; }
   }
 
   /* ---------- Hero ---------- */
@@ -345,7 +371,7 @@
 </head>
 <body>
 
-  <nav class="nav" style="position:sticky;top:0;z-index:50;">
+  <nav class="nav" id="siteNav">
     <div class="wrap">
       <a href="#top" class="brand">
         <span class="mark">School<span>Devs</span></span>
@@ -381,7 +407,7 @@
         </ul>
     </div>
 
-    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobileDrawer">
         <span></span>
         <span></span>
         <span></span>
@@ -613,24 +639,79 @@
   </footer>
 
   <script>
-    // Mobile nav toggle
-    const navToggle = document.getElementById('navToggle');
-    const navLinks = document.querySelector('.nav-links');
-    if (navToggle) {
-      navToggle.addEventListener('click', () => {
-        const isShown = navLinks.style.display === 'flex';
-        navLinks.style.display = isShown ? 'none' : 'flex';
-        navLinks.style.flexDirection = 'column';
-        navLinks.style.position = 'absolute';
-        navLinks.style.top = '72px';
-        navLinks.style.left = '0';
-        navLinks.style.right = '0';
-        navLinks.style.background = '#FAF7F1';
-        navLinks.style.padding = '20px 28px';
-        navLinks.style.borderBottom = '1px solid #E4DDCF';
-        navLinks.style.gap = '18px';
+    (function () {
+      const navToggle    = document.getElementById('navToggle');
+      const mobileDrawer = document.getElementById('mobileDrawer');
+      const navEl        = document.getElementById('siteNav');
+      const DESKTOP_MQ    = window.matchMedia('(min-width: 861px)');
+
+      function openDrawer() {
+        mobileDrawer.classList.add('open');
+        navToggle.classList.add('open');
+        navToggle.setAttribute('aria-expanded', 'true');
+        navToggle.setAttribute('aria-label', 'Close menu');
+      }
+      function closeDrawer() {
+        mobileDrawer.classList.remove('open');
+        navToggle.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
+        navToggle.setAttribute('aria-label', 'Open menu');
+      }
+
+      navToggle.addEventListener('click', function () {
+        mobileDrawer.classList.contains('open') ? closeDrawer() : openDrawer();
       });
-    }
+
+      // Close when a link inside the drawer is tapped
+      mobileDrawer.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', closeDrawer);
+      });
+
+      // Close on outside click
+      document.addEventListener('click', function (e) {
+        if (mobileDrawer.classList.contains('open') &&
+            !mobileDrawer.contains(e.target) &&
+            !navToggle.contains(e.target)) {
+          closeDrawer();
+        }
+      });
+
+      // Close on Escape
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeDrawer();
+      });
+
+      // Close automatically if resized back to desktop
+      DESKTOP_MQ.addEventListener('change', function (e) {
+        if (e.matches) closeDrawer();
+      });
+
+      // Sticky nav shadow once the page is scrolled
+      function onScroll() {
+        navEl.classList.toggle('scrolled', window.scrollY > 8);
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+
+      // Active link highlighting as sections come into view
+      const sectionIds = ['features', 'stats', 'testimonial'];
+      const sections = sectionIds.map(function (id) { return document.getElementById(id); }).filter(Boolean);
+      const navAnchors = document.querySelectorAll('.nav-links a, .mobile-drawer a[href^="#"]');
+
+      if ('IntersectionObserver' in window && sections.length) {
+        const spy = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              const id = entry.target.id;
+              navAnchors.forEach(function (a) {
+                a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+              });
+            }
+          });
+        }, { rootMargin: '-45% 0px -50% 0px' });
+        sections.forEach(function (s) { spy.observe(s); });
+      }
+    })();
 
     // Reveal on scroll
     if ('IntersectionObserver' in window) {
