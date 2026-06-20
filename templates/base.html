@@ -8,12 +8,128 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+  <style>
+    /* ── Mobile overlay backdrop ── */
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 1039;
+    }
+    .sidebar-backdrop.open { display: block; }
+
+    /* ── Top mobile bar ── */
+    .mobile-topbar {
+      display: none;
+      position: sticky;
+      top: 0;
+      z-index: 1038;
+      background: #1a2840;
+      padding: 0 1rem;
+      height: 56px;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #44546b;
+    }
+    .mobile-topbar .brand-mobile {
+      color: #fff;
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      letter-spacing: 0.01em;
+    }
+    .mobile-topbar .hamburger-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .mobile-topbar .hamburger-btn:hover { background: rgba(255,255,255,0.1); }
+    .mobile-topbar .hamburger-btn span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: #cfd6e2;
+      border-radius: 2px;
+      transition: transform 0.25s, opacity 0.25s;
+      transform-origin: center;
+    }
+    /* Animate to X when open */
+    .hamburger-btn.is-open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger-btn.is-open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .hamburger-btn.is-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* ── Sidebar ── */
+    .app-sidebar {
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ── Responsive breakpoints ── */
+    @media (max-width: 991.98px) {
+      .mobile-topbar { display: flex; }
+
+      .app-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100dvh;
+        z-index: 1040;
+        transform: translateX(-100%);
+        overflow-y: auto;
+        width: 260px !important;
+        /* sidebar already has its own bg from style.css; keep it */
+      }
+      .app-sidebar.is-open { transform: translateX(0); }
+
+      .app-shell {
+        display: block !important;
+        /* remove any flex/grid that puts sidebar beside main */
+      }
+
+      .app-main {
+        /* no left offset on mobile — sidebar is overlaid */
+        padding: 1rem !important;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .mobile-topbar { display: none !important; }
+      .sidebar-backdrop { display: none !important; }
+    }
+
+    /* ── Focus-visible ring for accessibility ── */
+    .hamburger-btn:focus-visible {
+      outline: 2px solid #7aa3d1;
+      outline-offset: 2px;
+    }
+  </style>
 </head>
 <body>
+  <!-- Mobile top bar (hidden on desktop) -->
+  <div class="mobile-topbar" id="mobileTopbar">
+    <a href="{{ url_for('admin.dashboard' if session.get('role') == 'admin' else 'student.dashboard') }}" class="brand-mobile">
+      Classroom Ledger
+    </a>
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open navigation" aria-expanded="false" aria-controls="appSidebar">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+
+  <!-- Overlay backdrop -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
   <div class="app-shell">
-    <aside class="app-sidebar">
+    <aside class="app-sidebar" id="appSidebar">
       <a href="{{ url_for('admin.dashboard' if session.get('role') == 'admin' else 'student.dashboard') }}" class="brand">
         <span class="brand-mark">&#9776;</span> Classroom Ledger
       </a>
@@ -71,6 +187,56 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+  <script>
+    (function () {
+      const btn      = document.getElementById('hamburgerBtn');
+      const sidebar  = document.getElementById('appSidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+
+      function openSidebar() {
+        sidebar.classList.add('is-open');
+        backdrop.classList.add('open');
+        btn.classList.add('is-open');
+        btn.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('aria-label', 'Close navigation');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeSidebar() {
+        sidebar.classList.remove('is-open');
+        backdrop.classList.remove('open');
+        btn.classList.remove('is-open');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.setAttribute('aria-label', 'Open navigation');
+        document.body.style.overflow = '';
+      }
+
+      btn.addEventListener('click', function () {
+        sidebar.classList.contains('is-open') ? closeSidebar() : openSidebar();
+      });
+
+      backdrop.addEventListener('click', closeSidebar);
+
+      /* Close on Escape */
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && sidebar.classList.contains('is-open')) closeSidebar();
+      });
+
+      /* Close sidebar if viewport is resized back to desktop */
+      window.addEventListener('resize', function () {
+        if (window.innerWidth >= 992) closeSidebar();
+      });
+
+      /* Close when a nav link is tapped (good UX on mobile) */
+      sidebar.querySelectorAll('.nav-link').forEach(function (link) {
+        link.addEventListener('click', function () {
+          if (window.innerWidth < 992) closeSidebar();
+        });
+      });
+    })();
+  </script>
+
   {% block scripts %}{% endblock %}
 </body>
 </html>
